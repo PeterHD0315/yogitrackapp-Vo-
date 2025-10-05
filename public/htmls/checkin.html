@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yogi Check-in</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .checkin-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        
+        .customer-info {
+            background-color: #e8f5e8;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        
+        .balance-warning {
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            color: #856404;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        
+        .balance-error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        
+        .attendance-record {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            background-color: white;
+        }
+        
+        .attendance-record.checked-in {
+            border-left: 4px solid #28a745;
+        }
+        
+        .attendance-record.cancelled {
+            border-left: 4px solid #dc3545;
+            opacity: 0.7;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .stat-card {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #4a90e2;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Yogi Check-in</h1>
+            <nav>
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="instructor.html">Instructors</a></li>
+                    <li><a href="package.html">Packages</a></li>
+                    <li><a href="customer.html">Customers</a></li>
+                    <li><a href="class.html">Classes</a></li>
+                    <li><a href="checkin.html" class="active">Check-in</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <main>
+            <!-- Check-in Section -->
+            <section class="checkin-section">
+                <h2>Customer Check-in</h2>
+                
+                <div class="form-group">
+                    <label for="customerSelect">Select Customer:</label>
+                    <select id="customerSelect" required>
+                        <option value="">Choose a customer...</option>
+                    </select>
+                </div>
+
+                <div id="customerInfo" class="customer-info" style="display: none;">
+                    <h3>Customer Information</h3>
+                    <p><strong>Name:</strong> <span id="customerName"></span></p>
+                    <p><strong>Email:</strong> <span id="customerEmail"></span></p>
+                    <p><strong>Phone:</strong> <span id="customerPhone"></span></p>
+                    <p><strong>Class Balance:</strong> <span id="customerBalance"></span> classes</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="classSelect">Select Class:</label>
+                    <select id="classSelect" required disabled>
+                        <option value="">Choose a class...</option>
+                    </select>
+                </div>
+
+                <div id="balanceAlert" class="balance-warning" style="display: none;">
+                    <strong>Warning:</strong> This customer has a low balance. Check-in will reduce their balance to <span id="newBalance"></span> classes.
+                </div>
+
+                <div id="balanceError" class="balance-error" style="display: none;">
+                    <strong>Error:</strong> This customer has insufficient balance for check-in.
+                </div>
+
+                <div class="form-actions">
+                    <button id="checkinBtn" disabled>Check In Customer</button>
+                    <button type="button" id="refreshBtn">Refresh Data</button>
+                </div>
+            </section>
+
+            <!-- Attendance History Section -->
+            <section class="checkin-section">
+                <h2>Recent Attendance</h2>
+                <div class="form-group">
+                    <label for="historyCustomerSelect">Filter by Customer (optional):</label>
+                    <select id="historyCustomerSelect">
+                        <option value="">All customers</option>
+                    </select>
+                </div>
+                <div id="attendanceHistory">
+                    <p>Loading attendance records...</p>
+                </div>
+            </section>
+
+            <!-- Statistics Section -->
+            <section class="checkin-section">
+                <h2>Attendance Statistics</h2>
+                <div id="attendanceStats">
+                    <p>Loading statistics...</p>
+                </div>
+            </section>
+        </main>
+
+        <!-- Success/Error Messages -->
+        <div id="message" class="message" style="display: none;"></div>
+    </div>
+
+    <script src="../js/checkin.js"></script>
+</body>
+</html>
