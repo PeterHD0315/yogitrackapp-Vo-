@@ -1,0 +1,26 @@
+{
+  "name": "yogitrack",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PeterHD0315/yogitrack.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/PeterHD0315/yogitrack/issues"
+  },
+  "homepage": "https://github.com/PeterHD0315/yogitrack#readme",
+  "dependencies": {
+    "express": "^5.1.0",
+    "heroku": "^10.13.2",
+    "mongodb": "^6.20.0",
+    "mongoose": "^8.19.0",
+    "mongoose-int32": "^0.6.0"
+  }
+}
