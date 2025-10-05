@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const uri = "mongodb://localhost:27017/yogidb"
+const uri = process.env.MONGO_URI || "mongodb+srv://PeterHD0315:MozambiqueHere7!@cluster0.h7s1fix.mongodb.net/yogidb";
 
 mongoose.connect(uri)
 .then(() => console.log("✅ Connected to MongoDB"))
