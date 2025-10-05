@@ -2,9 +2,15 @@
   "name": "yogitrack",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "yogiserver.cjs",
   "scripts": {
+    "start": "node yogiserver.cjs",
+    "dev": "node yogiserver.cjs",
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
   },
   "repository": {
     "type": "git",
@@ -18,7 +24,6 @@
   "homepage": "https://github.com/PeterHD0315/yogitrack#readme",
   "dependencies": {
     "express": "^5.1.0",
-    "heroku": "^10.13.2",
     "mongodb": "^6.20.0",
     "mongoose": "^8.19.0",
     "mongoose-int32": "^0.6.0"
