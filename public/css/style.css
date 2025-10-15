@@ -25,14 +25,61 @@ a { text-decoration: none; }
 
 /* ---------- Sidebar ---------- */
 .sidebar {
-  width: 220px; background: #bee6e0; color: #05713d;
-  display: flex; flex-direction: column; gap: 2rem; padding: 2rem 1rem;
+  width: var(--sidebar-w);
+  background: #d9f2ef;
+  border-right: var(--bd);
+  padding: 14px 12px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex; flex-direction: column; gap: 2rem;
 }
 .logo-wrap { display: flex; align-items: center; gap: .5rem; color: inherit; font-weight: 600; }
 .logo { width: 100x; height: 100px; }
 .nav { display: flex; flex-direction: column; gap: 1rem; }
 .nav a { color: inherit; padding: .25rem 0; }
 .nav a.active, .nav a:hover { opacity: .8; }
+
+.sidebar-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.sidebar-logo {
+  display: block;
+  max-width: 68px;   /* smaller logo */
+  height: auto;
+}
+
+.sidebar-header h2 {
+  font-size: 1rem;   /* compact title */
+  margin: 0;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;          /* consistent spacing */
+  margin-top: 8px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  font-size: 0.95rem;
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+  transition: background .15s ease, color .15s ease, transform .05s ease;
+}
+
+.nav-item:hover { background: rgba(0,0,0,0.06); }
+.nav-item.active { background: rgba(0,0,0,0.10); font-weight: 600; }
 
 /* ---------- Form elements ---------- */
 input, textarea {
@@ -295,4 +342,144 @@ select.form-input {
   border-radius: 0.125rem;
   font-size: 0.7rem;
   margin-top: 0.25rem;
+}
+
+/* --- Dashboard polish --- */
+:root {
+  --sidebar-w: 220px;
+  --gap: 16px;
+  --radius: 12px;
+  --bd: 1px solid #e5e7eb;
+}
+
+.app-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+  width: var(--sidebar-w);
+  background: #d9f2ef;
+  border-right: var(--bd);
+  padding: 14px 12px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex; flex-direction: column; gap: 2rem;
+}
+.logo-wrap { display: flex; align-items: center; gap: .5rem; color: inherit; font-weight: 600; }
+.logo { width: 100x; height: 100px; }
+.nav { display: flex; flex-direction: column; gap: 1rem; }
+.nav a { color: inherit; padding: .25rem 0; }
+.nav a.active, .nav a:hover { opacity: .8; }
+
+.sidebar-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.sidebar-logo {
+  display: block;
+  max-width: 68px;   /* smaller logo */
+  height: auto;
+}
+
+.sidebar-header h2 {
+  font-size: 1rem;   /* compact title */
+  margin: 0;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;          /* consistent spacing */
+  margin-top: 8px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  font-size: 0.95rem;
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+  transition: background .15s ease, color .15s ease, transform .05s ease;
+}
+
+.nav-item:hover { background: rgba(0,0,0,0.06); }
+.nav-item.active { background: rgba(0,0,0,0.10); font-weight: 600; }
+
+/* Main */
+.main-content {
+  flex: 1;
+  padding: 24px;
+}
+
+.page-header {
+  max-width: 1100px;
+  margin: 0 auto 14px;
+}
+
+.page-header h1 {
+  font-size: 1.6rem;     /* smaller heading */
+  margin: 0 0 6px 0;
+}
+
+.page-header p {
+  margin: 0;
+  color: #596168;
+}
+
+/* Cards */
+.dashboard-grid {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--gap);
+}
+
+.dashboard-card {
+  background: #fff;
+  border: var(--bd);
+  border-radius: var(--radius);
+  padding: 18px;
+  box-shadow: 0 6px 18px rgba(0,0,0,.05);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: transform .08s ease, box-shadow .2s ease;
+}
+
+.dashboard-card h2 {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.dashboard-card p {
+  color: #5f6b73;
+  margin: 0;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(0,0,0,.08);
+}
+
+.dashboard-card .btn {
+  align-self: flex-start;
+  margin-top: 8px;
+}
+
+/* Compact on narrow screens */
+@media (max-width: 900px) {
+  .sidebar { width: 190px; }
+  .sidebar-logo { max-width: 58px; }
+  .nav-item { padding: 8px 9px; font-size: 0.9rem; }
 }

@@ -19,6 +19,9 @@
     "express": "^5.1.0",
     "mongoose": "^8.19.0"
   },
+  "overrides": {
+    "mongodb": "6.17.0"
+  },
   "devDependencies": {
     "nodemon": "^3.0.1"
   },
