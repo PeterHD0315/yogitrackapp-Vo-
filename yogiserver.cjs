@@ -1,22 +1,30 @@
-const express = require("express");
+const express = require('express');
+const path = require('path');
+const mongoose = require('./config/mongodbconn.cjs');
+
+const instructorRoutes = require('./routes/instructorRoutes.cjs');
+const packageRoutes = require('./routes/packageRoutes.cjs');
+const customerRoutes = require('./routes/customerRoutes.cjs');
+const classRoutes = require('./routes/classRoutes.cjs');
+const attendanceRoutes = require('./routes/attendanceRoutes.cjs');
+
 const app = express();
-
-// Serve static files from the public dir
-app.use(express.static("public"));
-app.use(express.json());
-
-app.use("/api/instructor", require("./routes/instructorRoutes.cjs"));
-app.use("/api/package", require("./routes/packageRoutes.cjs"));
-app.use("/api/customer", require("./routes/customerRoutes.cjs"));
-app.use("/api/class", require("./routes/classRoutes.cjs"));
-app.use("/api/attendance", require("./routes/attendanceRoutes.cjs"));
-app.use("/api/admin", require("./routes/adminRoutes.cjs"));
-
-
-
-// Start the web server
 const PORT = process.env.PORT || 8080;
-app.listen(PORT, function () {
+
+// Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, 'public')));
+
+// API Routes
+app.use('/api/instructor', instructorRoutes);
+app.use('/api/package', packageRoutes);
+app.use('/api/customer', customerRoutes);
+app.use('/api/class', classRoutes);
+app.use('/api/attendance', attendanceRoutes);
+
+// Start server
+app.listen(PORT, () => {
   console.log(`Listening on port ${PORT}...`);
-  console.log('Open http://localhost:8080/index.html in your browser to view the app.');
+  console.log(`Visit http://localhost:${PORT}/index.html in your browser to view the app.`);
 });

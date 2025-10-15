@@ -23,4 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
       resultDiv.textContent = `❌ ${err.message}`;
     }
   });
+
+  // Dashboard initialization code can go here if needed in the future
+  console.log('Dashboard loaded');
 });
