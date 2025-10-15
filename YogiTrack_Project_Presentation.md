@@ -1,459 +1,241 @@
 # YogiTrack Project Presentation
 ## ACS 5423 - Software Development
 
-**Student:** Peter Vo  
-**Date:** October 5, 2025  
-**Project:** YogiTrack - Yoga Studio Management System  
+Student: Peter Vo  
+Date: October 15, 2025  
+Project: YogiTrack – Yoga Studio Management System
 
 ---
 
-## 1. Key Use-Cases Implemented and In Progress
-
-### ✅ **Fully Implemented Use Cases:**
-
-#### **1.1 Instructor Management**
-- **Add New Instructors:** Register yoga instructors with personal and contact information
-- **Search & Update Instructors:** Find existing instructors and modify their details
-- **Delete Instructors:** Remove instructors from the system
-- **View Instructor Directory:** Browse all registered instructors
-
-#### **1.2 Package Management**
-- **Create Class Packages:** Define different pricing tiers (4-class, 10-class, unlimited)
-- **Senior Discounts:** Automatic pricing for customers 65+
-- **Package Updates:** Modify package details and pricing
-- **Package Catalog:** View all available packages with pricing
-
-#### **1.3 Customer Management**
-- **Customer Registration:** Register new customers with full profile information
-- **Class Balance Tracking:** Monitor remaining classes for each customer
-- **Senior Status Management:** Apply age-based discounts automatically
-- **Customer Directory:** Search and manage all customer records
-- **Contact Preferences:** Track preferred communication method (phone/email)
-
-#### **1.4 Class Schedule Management**
-- **Flexible Scheduling:** Create one-time and recurring classes
-- **Multi-day Classes:** Schedule classes across multiple days of the week
-- **Instructor Assignment:** Link classes to specific instructors
-- **Class Types:** Categorize classes as "General" or "Special"
-- **Weekly Calendar View:** Visual representation of entire studio schedule
-- **Schedule Updates:** Modify existing class schedules
-
-#### **1.5 Check-in System**
-- **Customer Check-ins:** Process customer attendance with balance validation
-- **Balance Management:** Automatic deduction of class credits upon check-in
-- **Attendance History:** Track all customer check-ins with detailed records
-- **Check-in Cancellation:** Reverse check-ins and restore customer balance
-- **Attendance Analytics:** Real-time statistics on studio usage
-- **Balance Warnings:** Alert system for low customer balances
-
-### 🔄 **In Progress Features:**
-Currently, all core modules are complete. Future enhancements may include:
-- **Payment Processing Integration**
-- **Automated Email/SMS Notifications**
-- **Instructor Scheduling Preferences**
-- **Advanced Reporting Dashboard**
+## 0) Executive Summary
+YogiTrack is a full‑stack, CRUD‑driven web app for managing yoga studios. It covers instructors, class packages, customers, class schedules, and customer check‑ins (attendance). The system runs locally and in the cloud (Heroku + MongoDB Atlas), follows a clean MVC structure (Express/Mongoose), and uses a simple, consistent UI with a left sidebar and feature‑specific pages.
 
 ---
 
-## 2. Data Model Design
+## 1) Implemented Use Cases
 
-### **2.1 Database Architecture**
-- **Database:** MongoDB Atlas (Cloud-hosted NoSQL)
-- **ODM:** Mongoose for schema validation and data modeling
-- **Collections:** 5 main collections with defined relationships
+### 1.1 Instructors
+- Create, search, update, delete instructors
+- Directory view via searchable dropdown
+- ID scheme: I001, I002, …
 
-### **2.2 Collection Schemas**
+### 1.2 Packages
+- CRUD for class packages (4‑class, 10‑class, unlimited, etc.)
+- Descriptions and prices
+- ID scheme: P001, P002, …
 
-#### **Instructor Collection**
-```javascript
-{
-  instructorId: String,      // I001, I002, etc.
-  firstname: String,
-  lastname: String,
-  email: String,
-  phone: String,
-  address: String,
-  preferredContact: String   // "phone" or "email"
-}
+### 1.3 Customers
+- Registration with contact preferences
+- Senior flag (65+) and classBalance tracking
+- Full CRUD; ID scheme: Y001, Y002, …
+
+### 1.4 Class Schedule
+- CRUD for classes with instructor assignment
+- Multi‑slot weekly schedule (day, time, duration)
+- Types: General, Special
+- Weekly schedule modal view
+
+### 1.5 Check‑ins (Attendance)
+- Check in a customer to a class (validates and decrements classBalance)
+- Cancel check‑in (restores balance), mark no‑show
+- Recent history and basic statistics
+
+Status: All core modules above are complete. Demo/seed tooling was removed from production UI and APIs to keep the app clean.
+
+---
+
+## 2) System Architecture
+
+- Frontend: HTML5, CSS3, vanilla JS (Fetch API)
+- Backend: Node.js (Express 5.x)
+- Database: MongoDB Atlas (Mongoose ODM)
+- Runtime: Local (Node 22.x) and Heroku (heroku‑24)
+- Structure:
+  - /public (static assets, pages, JS)
+  - /models (Mongoose schemas)
+  - /controllers (business logic)
+  - /routes (Express routers)
+  - /config/mongodbconn.cjs (DB connection)
+  - yogiserver.cjs (app bootstrap)
+
+---
+
+## 3) Data Model (MongoDB Collections)
+
+### Instructor
+```
+instructorId: String, firstname, lastname, email, phone, address, preferredContact
 ```
 
-#### **Package Collection**
-```javascript
-{
-  packageId: String,         // P001, P002, S001 (Senior)
-  packageName: String,       // "4 Class Pass", "10 Class Pass"
-  description: String,       // "Valid for 1 month"
-  price: Number             // 70.00, 140.00, etc.
-}
+### Package
+```
+packageId: String, packageName, description, price:Number
 ```
 
-#### **Customer Collection**
-```javascript
-{
-  customerId: String,        // Y001, Y002, etc.
-  firstName: String,
-  lastName: String,
-  email: String,
-  phone: String,
-  senior: Boolean,           // Age 65+ discount eligibility
-  address: String,
-  preferredContact: String,  // "phone" or "email"
-  classBalance: Number       // Remaining class credits
-}
+### Customer
+```
+customerId: String, firstName, lastName, email, phone,
+senior:Boolean, address, preferredContact, classBalance:Number
 ```
 
-#### **Class Collection**
-```javascript
-{
-  classId: String,           // A001, A002, etc.
-  className: String,         // "Breath work", "Yoga with weights"
-  instructorId: String,      // Foreign key to Instructor
-  classType: String,         // "General" or "Special"
-  description: String,
-  daytime: [{
-    day: String,             // "Mon", "Tue", etc.
-    time: String,            // "09:00:00"
-    duration: Number         // Minutes (45, 60, etc.)
-  }]
-}
+### Class
+```
+classId: String, className, instructorId, classType, description,
+daytime:[{ day, time, duration:Number }]
 ```
 
-#### **Attendance Collection**
-```javascript
-{
-  checkinId: Number,         // Auto-increment ID
-  customerId: String,        // Foreign key to Customer
-  classId: String,           // Foreign key to Class
-  datetime: String,          // Check-in date
-  status: String             // "checked-in", "cancelled", "no-show"
-}
+### Attendance
+```
+checkinId:Number, customerId, classId, datetime:String, status:"checked-in"|"cancelled"|"no-show"
 ```
 
-### **2.3 Data Relationships**
-- **One-to-Many:** Instructor → Classes (One instructor teaches multiple classes)
-- **Many-to-Many:** Customers ↔ Classes (via Attendance records)
-- **Reference:** Attendance references both Customer and Class documents
-- **Embedded:** Class schedule data embedded within Class documents
+Relationships:
+- Instructor 1‑to‑many Class (by instructorId)
+- Customer many‑to‑many Class via Attendance
+- Attendance references Customer and Class; Class embeds its weekly slots
 
 ---
 
-## 3. UI Design
+## 4) API Endpoints (Summary)
 
-### **3.1 Design Philosophy**
-- **Consistent Navigation:** Sidebar navigation across all management modules
-- **Form-based Interface:** Standardized CRUD operations for all entities
-- **Visual Feedback:** Color-coded status indicators and success/error messages
-- **Responsive Design:** Adapts to different screen sizes
+Base: /api
 
-### **3.2 Color Scheme & Branding**
-- **Primary Color:** Teal (#008080) - Calming, yoga-inspired
-- **Secondary Colors:** Light teal (#bee6e0) for sidebar
-- **Accent Colors:** Green for success, red for errors/warnings
-- **Typography:** System fonts for clean, readable interface
+- /instructor
+  - GET /getIds, POST /add, GET /get, PUT /update, DELETE /delete
+- /package
+  - GET /getIds, POST /add, GET /get, PUT /update, DELETE /delete
+- /customer
+  - GET /getIds, GET /get, POST /add, PUT /update, DELETE /delete, PUT /updateClassBalance
+- /class
+  - GET /getIds, GET /get, POST /add, PUT /update, DELETE /delete,
+    GET /byInstructor, GET /weekly
+- /attendance
+  - GET /getAttendanceRecords, GET /getStats,
+    POST /checkin, PUT /cancelCheckin, PUT /markNoShow
 
-### **3.3 Page Structure**
-
-#### **Welcome Page**
-- Clean, centered design with studio logo
-- Single-action entry point ("Log in" button)
-- Professional yoga studio aesthetic
-
-#### **Dashboard**
-- **Sidebar Navigation:** Persistent across all pages
-  - Instructors, Packages, Class Schedule, Customers, Check-ins
-- **Background:** Subtle yoga class image with overlay
-- **Logo Integration:** YogiTrack branding throughout
-
-#### **Management Pages (Standardized Layout)**
-- **Search Mode:** Dropdown to select existing records
-- **Add Mode:** Form to create new records
-- **Edit Mode:** Pre-populated form for updates
-- **Action Buttons:** Search, Add New, Save, Delete, Clear, Exit
-
-#### **Special UI Components**
-
-**Class Schedule Management:**
-- **Dynamic Schedule Builder:** Add/remove multiple time slots
-- **Weekly Calendar Modal:** 7-day grid view of all classes
-- **Time/Duration Controls:** Precise scheduling interface
-
-**Check-in System:**
-- **Customer Info Panel:** Real-time balance display
-- **Balance Warnings:** Visual alerts for low/zero balances
-- **Attendance History:** Filterable record display
-- **Statistics Dashboard:** Key metrics with visual emphasis
-
-### **3.4 User Experience Features**
-- **Auto-ID Generation:** System generates next available IDs
-- **Real-time Validation:** Form validation with immediate feedback
-- **Confirmation Dialogs:** Prevent accidental deletions
-- **Data Enrichment:** Display related information (instructor names, customer details)
+(Exact request/response shapes align with the page JS in /public/js/*.js.)
 
 ---
 
-## 4. Tools and Techniques Used (Beyond Course Material)
+## 5) UI/UX Design
 
-### **4.1 Cloud Database Integration**
-- **MongoDB Atlas:** Cloud-hosted database service
-- **Connection String Management:** Environment variable configuration
-- **Remote Database Access:** Cross-platform cloud connectivity
-
-### **4.2 Advanced JavaScript Techniques**
-- **Async/Await Patterns:** Modern asynchronous programming
-- **Fetch API:** RESTful API communication
-- **Dynamic DOM Manipulation:** Real-time UI updates
-- **Event-Driven Architecture:** Responsive user interactions
-
-### **4.3 CSS Grid & Flexbox**
-- **CSS Grid:** Complex layout management (weekly schedule, statistics)
-- **Flexbox:** Responsive component alignment
-- **CSS Custom Properties:** Maintainable color schemes
-- **CSS Modules:** Component-specific styling
-
-### **4.4 Node.js & Express.js 5.x**
-- **Latest Express Version:** Using Express 5.1.0 (beta features)
-- **Middleware Chaining:** Structured request processing
-- **Route Organization:** Modular route definitions
-- **Error Handling:** Comprehensive error management
-
-### **4.5 Mongoose ODM**
-- **Schema Validation:** Data integrity enforcement
-- **Middleware Hooks:** Pre/post operation handling
-- **Population:** Automatic reference resolution
-- **Aggregation Pipeline:** Complex data queries
-
-### **4.6 Deployment Technologies**
-- **Heroku Platform:** Cloud application hosting
-- **Git Integration:** Automated deployment pipeline
-- **Environment Variables:** Secure configuration management
-- **Process Management:** Production-ready server configuration
-
-### **4.7 Development Tools**
-- **Git Version Control:** Professional source code management
-- **VS Code Integration:** Enhanced development workflow
-- **NPM Package Management:** Dependency management
-- **JSON Data Modeling:** API-first development approach
+- Layout: Sticky left sidebar; main content area with page header
+- Dashboard: Clean card grid (Instructors, Packages, Classes, Customers, Check‑ins)
+- Forms: “Search / Add / Edit” modes with validation and confirmation prompts
+- Schedule Builder: Add/remove day/time/duration rows
+- Accessibility: Semantic HTML, larger clickable areas, keyboard‑friendly controls
+- Styling: Lightweight custom CSS (Flex/Grid), compact typography, reduced sidebar clutter, smaller logo
 
 ---
 
-## 5. Key Challenges and Learnings
+## 6) Tools & Techniques (Beyond ZyBook)
 
-### **5.1 Technical Challenges**
-
-#### **Node.js Version Compatibility**
-- **Problem:** Native dependencies failing with Node v16.15.1
-- **Solution:** Upgraded to Node v22.20.0 for better compatibility
-- **Learning:** Always verify Node.js version requirements for dependencies
-
-#### **MongoDB Atlas Connection**
-- **Problem:** Complex connection string management
-- **Solution:** Environment variable configuration with fallback
-- **Learning:** Cloud database security requires careful credential management
-
-#### **Cross-Collection Data Enrichment**
-- **Problem:** NoSQL doesn't have built-in JOINs like SQL databases
-- **Solution:** Implemented manual data enrichment in controllers
-- **Learning:** NoSQL requires different thinking about data relationships
-
-#### **Real-time Balance Management**
-- **Problem:** Ensuring customer balance accuracy during check-ins
-- **Solution:** Atomic operations with proper error handling
-- **Learning:** Financial data requires transaction-like operations even in NoSQL
-
-### **5.2 Design Challenges**
-
-#### **Complex Form State Management**
-- **Problem:** Managing search/add/edit modes in single forms
-- **Solution:** JavaScript state management with mode switching
-- **Learning:** State management is crucial for good UX
-
-#### **Dynamic Schedule Interface**
-- **Problem:** Flexible class scheduling with multiple time slots
-- **Solution:** Dynamic DOM manipulation with add/remove functionality
-- **Learning:** Complex UIs require careful event handling and state tracking
-
-#### **Responsive Weekly Calendar**
-- **Problem:** Displaying 7-day schedule grid across devices
-- **Solution:** CSS Grid with responsive breakpoints
-- **Learning:** Mobile-first design principles are essential
-
-### **5.3 Data Architecture Learnings**
-
-#### **ID Generation Strategy**
-- **Challenge:** Creating meaningful, sequential IDs (I001, P001, Y001, A001)
-- **Solution:** Automated next-ID calculation with proper padding
-- **Learning:** Auto-increment in NoSQL requires custom implementation
-
-#### **Schema Design Evolution**
-- **Challenge:** Balancing embedded vs. referenced data
-- **Solution:** Embedded schedules within classes, referenced relationships elsewhere
-- **Learning:** NoSQL schema design requires upfront architectural decisions
-
-### **5.4 Development Process Insights**
-
-#### **Modular Architecture Benefits**
-- **Approach:** Separate models, controllers, routes, and frontend components
-- **Result:** Easy to debug, test, and extend functionality
-- **Learning:** MVC pattern scales well for web applications
-
-#### **API-First Development**
-- **Approach:** Built backend APIs before frontend interfaces
-- **Result:** Clean separation between data and presentation layers
-- **Learning:** API-first approach enables future mobile/web integrations
+- Cloud database with MongoDB Atlas (secured via environment variables)
+- Heroku deployment with Procfile and engines pinning
+- Modern JS (async/await, Fetch, modular controllers)
+- Express 5 routing patterns
+- Mongoose validation and query helpers
+- Practical production tweaks: cache headers, static serving, error logging
+- Node 22.x; npm overrides to stabilize mongodb driver if needed
 
 ---
 
-## 6. Live Product Demo Script
+## 7) Deployment
 
-### **6.1 Demo Flow (15-20 minutes)**
+### Heroku
+- Procfile: `web: node yogiserver.cjs`
+- Config vars:
+  - `MONGO_URI=mongodb+srv://<user>:<pass>@<cluster>/yogidb?...`
+  - `NODE_ENV=production`
+- Git deploy: `git push heroku main` (or master)
+- Open: `heroku open`
+- Logs: `heroku logs --tail`
 
-#### **Opening (2 minutes)**
-1. **Welcome Page Tour**
-   - Show YogiTrack branding and clean interface
-   - Click "Log in" to enter dashboard
-   - Highlight navigation structure
-
-#### **Core Management Features (12 minutes)**
-
-**Instructor Management (2 minutes):**
-- Add new instructor: "Michael Johnson" with contact details
-- Demonstrate form validation and auto-ID generation
-- Show instructor directory and search functionality
-
-**Package Management (2 minutes):**
-- Create senior discount package
-- Demonstrate pricing structure
-- Show package catalog with different tiers
-
-**Customer Management (3 minutes):**
-- Register new customer with class balance
-- Show senior status handling
-- Demonstrate balance tracking system
-- Update customer information
-
-**Class Schedule Management (3 minutes):**
-- Create recurring class with multiple days
-- Assign instructor to class
-- Show dynamic schedule builder
-- **Highlight:** Open weekly calendar modal to show visual schedule
-
-**Check-in System (2 minutes):**
-- Select customer and class for check-in
-- Show balance validation and warnings
-- Process check-in and demonstrate balance deduction
-- Show attendance history and statistics
-
-#### **Advanced Features Showcase (4 minutes)**
-
-**Data Integration:**
-- Show how customer info appears in check-in system
-- Demonstrate instructor names in class listings
-- Show enriched attendance records with all related data
-
-**Error Handling:**
-- Attempt check-in with zero balance customer
-- Show validation messages and user guidance
-
-**Statistics Dashboard:**
-- Display attendance metrics
-- Show popular classes and usage patterns
-
-#### **Technical Architecture (2 minutes)**
-- Brief backend tour showing MongoDB collections
-- Highlight cloud deployment on Heroku
-- Show responsive design across different screen sizes
-
-### **6.2 Demo Talking Points**
-
-- **User Experience:** "Notice how the interface guides users through each process"
-- **Data Integrity:** "The system prevents invalid operations like negative balances"
-- **Scalability:** "Built on cloud infrastructure for studio growth"
-- **Integration:** "All modules work together - customer data flows to check-ins automatically"
+### MongoDB Atlas
+- Network Access: allow current IP or VPC peering
+- Users: app‑only user with least privilege
+- Password: URL‑encode special chars (e.g., `!` -> `%21`)
 
 ---
 
-## 7. Next Steps
+## 8) Local Development
 
-### **7.1 Phase 2 Enhancements**
+```
+nvm use 22
+npm install
+# .env -> MONGO_URI="mongodb+srv://.../yogidb?..."
+npm start
+# http://localhost:8080/ or /htmls/dashboard.html
+```
 
-#### **Payment Integration**
-- **Stripe API Integration:** Process package purchases
-- **Payment History:** Track customer transactions
-- **Automatic Balance Updates:** Credit accounts upon payment
-
-#### **Communication System**
-- **Email Notifications:** Class reminders and confirmations
-- **SMS Integration:** Text-based notifications
-- **Automated Marketing:** Class promotion to targeted customers
-
-#### **Advanced Analytics**
-- **Revenue Reporting:** Financial performance metrics
-- **Instructor Performance:** Class popularity and attendance rates
-- **Customer Retention:** Lifetime value and engagement tracking
-
-### **7.2 Technical Improvements**
-
-#### **Security Enhancements**
-- **User Authentication:** Login system with role-based access
-- **Data Encryption:** Secure customer information storage
-- **Audit Logging:** Track all system changes
-
-#### **Performance Optimization**
-- **Database Indexing:** Improve query performance
-- **Caching Strategy:** Reduce database load
-- **API Rate Limiting:** Prevent abuse
-
-#### **Mobile Application**
-- **React Native App:** Native mobile experience
-- **Customer Self-Service:** Balance checking and scheduling
-- **Push Notifications:** Real-time updates
-
-### **7.3 Business Logic Extensions**
-
-#### **Advanced Scheduling**
-- **Instructor Availability:** Conflict prevention
-- **Room Management:** Studio space allocation
-- **Substitute Teacher System:** Coverage management
-
-#### **Customer Experience**
-- **Online Booking:** Self-service class registration
-- **Waitlist Management:** Handle overbooked classes
-- **Loyalty Program:** Reward frequent customers
-
-#### **Operations Management**
-- **Equipment Tracking:** Yoga mat and prop management
-- **Facility Maintenance:** Schedule cleaning and repairs
-- **Staff Scheduling:** Non-instructor employee management
+Troubleshooting:
+- If “Server is up and running.” persists, ensure yogiserver.cjs serves public/index.html at “/” and hard‑refresh.
+- If `mongodb lib/operations/search_indexes/update.js` errors occur, delete node_modules + lockfile, `npm cache clean --force`, reinstall; if needed, pin driver:
+  - package.json → `"overrides": { "mongodb": "6.17.0" }`
 
 ---
 
-## 8. Technical Specifications Summary
+## 9) Challenges & Learnings
 
-### **8.1 Technology Stack**
-- **Frontend:** HTML5, CSS3, Vanilla JavaScript (ES6+)
-- **Backend:** Node.js v22.20.0, Express.js v5.1.0
-- **Database:** MongoDB Atlas (Cloud NoSQL)
-- **ODM:** Mongoose v8.19.0
-- **Deployment:** Heroku Platform
-- **Version Control:** Git/GitHub
-
-### **8.2 Performance Metrics**
-- **Database Response Time:** < 100ms for typical queries
-- **Page Load Time:** < 2 seconds on standard connections
-- **Concurrent Users:** Supports 50+ simultaneous users
-- **Data Storage:** Scalable cloud database with automatic backups
-
-### **8.3 Code Quality**
-- **Architecture:** Clean MVC separation
-- **Error Handling:** Comprehensive try-catch blocks
-- **Code Comments:** Extensive documentation
-- **Validation:** Both client-side and server-side validation
-- **Security:** Environment variable configuration, input sanitization
+- Node engine mismatches and native builds → standardized on Node 22.x
+- Atlas connection management and secret handling via .env/Heroku config vars
+- NoSQL relationship modeling (embedded vs referenced) for schedules/attendance
+- Balance adjustments as atomic operations with clear error feedback
+- UI polish: compact sidebar, consistent card grid, schedule modal usability
 
 ---
 
-**Thank you for your attention! Questions and feedback are welcome.**
+## 10) Live Demo Script (10–15 min)
+
+1) Welcome → Dashboard  
+2) Instructors: add and edit an instructor  
+3) Packages: create/update a package  
+4) Customers: create customer with balance, toggle senior  
+5) Classes: add class with multiple slots; open weekly view  
+6) Check‑ins: check in customer; show balance change and history; cancel once  
+7) Close with architecture (models/routes) and Heroku deployment note
 
 ---
 
-*This presentation demonstrates a complete, production-ready yoga studio management system built with modern web technologies and deployed to cloud infrastructure.*
+## 11) Next Steps
+
+- Payments: Stripe checkout and package purchase flow
+- AuthN/AuthZ: Admin vs staff roles; audit logs
+- Messaging: Email/SMS reminders and low‑balance alerts
+- Reporting: Revenue, utilization, instructor performance
+- Mobile: React Native companion app for customers/staff
+
+---
+
+## 12) Appendix
+
+### Project Structure (high level)
+```
+yogiserver.cjs
+config/
+  mongodbconn.cjs
+controllers/
+models/
+routes/
+public/
+  index.html
+  htmls/ (dashboard, instructor, package, class, customer, checkin)
+  js/
+  css/style.css
+  images/Logo.png
+```
+
+### Environment Variables
+```
+MONGO_URI=mongodb+srv://<user>:<pass>@<cluster>/yogidb?retryWrites=true&w=majority&appName=Cluster0
+PORT=8080
+NODE_ENV=development|production
+```
+
+### Scripts
+```
+npm start        # run server
+npm run dev      # if nodemon is configured
+```
+
+This document reflects the current, complete state of the project and can be used for class presentation and handoff.
