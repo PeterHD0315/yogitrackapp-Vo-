@@ -26,10 +26,10 @@ function setupEventListeners() {
     historyCustomerSelect.addEventListener('change', filterAttendanceHistory);
 }
 
-// Load customers from API
+// Load customers from API (IDs + basic info)
 async function loadCustomers() {
     try {
-        const response = await fetch('/api/customer');
+        const response = await fetch('/api/customer/getCustomerIds');
         customers = await response.json();
         
         populateCustomerSelects();
@@ -39,10 +39,10 @@ async function loadCustomers() {
     }
 }
 
-// Load classes from API
+// Load classes from API (IDs + names + instructor)
 async function loadClasses() {
     try {
-        const response = await fetch('/api/class');
+        const response = await fetch('/api/class/getClassIds');
         classes = await response.json();
         
         populateClassSelect();
@@ -63,13 +63,13 @@ function populateCustomerSelects() {
     
     customers.forEach(customer => {
         const option1 = document.createElement('option');
-        option1.value = customer._id;
-        option1.textContent = `${customer.firstName} ${customer.lastName}`;
+        option1.value = customer.customerId;
+        option1.textContent = `${customer.customerId}: ${customer.firstName} ${customer.lastName}`;
         customerSelect.appendChild(option1);
         
         const option2 = document.createElement('option');
-        option2.value = customer._id;
-        option2.textContent = `${customer.firstName} ${customer.lastName}`;
+        option2.value = customer.customerId;
+        option2.textContent = `${customer.customerId}: ${customer.firstName} ${customer.lastName}`;
         historyCustomerSelect.appendChild(option2);
     });
 }
@@ -79,27 +79,11 @@ function populateClassSelect() {
     const classSelect = document.getElementById('classSelect');
     classSelect.innerHTML = '<option value="">Choose a class...</option>';
     
-    // Get today's date for filtering
-    const today = new Date();
-    const todayStr = today.toISOString().split('T')[0];
-    
-    // Filter classes for today and future dates
-    const availableClasses = classes.filter(cls => {
-        if (cls.isRecurring) {
-            return true; // Recurring classes are always available
-        } else {
-            return cls.date >= todayStr;
-        }
-    });
-    
-    availableClasses.forEach(cls => {
+    classes.forEach(cls => {
         const option = document.createElement('option');
-        option.value = cls._id;
-        
-        const instructor = cls.instructor ? `${cls.instructor.firstName} ${cls.instructor.lastName}` : 'TBD';
-        const dateStr = cls.isRecurring ? `${cls.daysOfWeek.join(', ')} at ${cls.time}` : `${cls.date} at ${cls.time}`;
-        
-        option.textContent = `${cls.className} - ${instructor} (${dateStr})`;
+        option.value = cls.classId || cls._id || '';
+        const instructorName = cls.instructorName || `Instructor ${cls.instructorId || ''}`;
+        option.textContent = `${cls.classId || ''}: ${cls.className} (${instructorName})`;
         classSelect.appendChild(option);
     });
 }
@@ -113,30 +97,38 @@ function onCustomerSelect() {
     const balanceError = document.getElementById('balanceError');
     
     if (customerSelect.value) {
-        const customer = customers.find(c => c._id === customerSelect.value);
-        if (customer) {
-            // Show customer info
-            document.getElementById('customerName').textContent = `${customer.firstName} ${customer.lastName}`;
-            document.getElementById('customerEmail').textContent = customer.email;
-            document.getElementById('customerPhone').textContent = customer.phone;
-            document.getElementById('customerBalance').textContent = customer.classBalance;
-            
-            customerInfo.style.display = 'block';
-            classSelect.disabled = false;
-            
-            // Check balance warnings
-            if (customer.classBalance <= 0) {
-                balanceError.style.display = 'block';
-                balanceAlert.style.display = 'none';
-            } else if (customer.classBalance <= 3) {
-                balanceAlert.style.display = 'block';
-                balanceError.style.display = 'none';
-                document.getElementById('newBalance').textContent = customer.classBalance - 1;
-            } else {
-                balanceAlert.style.display = 'none';
-                balanceError.style.display = 'none';
-            }
-        }
+        const selectedId = customerSelect.value;
+        // Fetch full customer details for richer info
+        fetch(`/api/customer/getCustomer?customerId=${encodeURIComponent(selectedId)}`)
+            .then(res => res.json())
+            .then(customer => {
+                if (customer) {
+                    document.getElementById('customerName').textContent = `${customer.firstName} ${customer.lastName}`;
+                    document.getElementById('customerEmail').textContent = customer.email || '';
+                    document.getElementById('customerPhone').textContent = customer.phone || '';
+                    document.getElementById('customerBalance').textContent = customer.classBalance ?? 0;
+
+                    customerInfo.style.display = 'block';
+                    classSelect.disabled = false;
+
+                    const bal = Number(customer.classBalance ?? 0);
+                    if (bal <= 0) {
+                        balanceError.style.display = 'block';
+                        balanceAlert.style.display = 'none';
+                    } else if (bal <= 3) {
+                        balanceAlert.style.display = 'block';
+                        balanceError.style.display = 'none';
+                        document.getElementById('newBalance').textContent = bal - 1;
+                    } else {
+                        balanceAlert.style.display = 'none';
+                        balanceError.style.display = 'none';
+                    }
+                    updateCheckinButton();
+                }
+            })
+            .catch(err => {
+                console.error('Failed to load customer details', err);
+            });
     } else {
         customerInfo.style.display = 'none';
         classSelect.disabled = true;
@@ -172,8 +164,8 @@ async function performCheckin() {
     const classSelect = document.getElementById('classSelect');
     
     const checkinData = {
-        customerId: customerSelect.value,
-        classId: classSelect.value
+        customerId: customerSelect.value, // expects custom customerId like Y001
+        classId: classSelect.value        // expects custom classId like A001
     };
     
     try {
@@ -215,7 +207,7 @@ async function performCheckin() {
 // Load attendance history
 async function loadAttendanceHistory() {
     try {
-        const response = await fetch('/api/attendance');
+        const response = await fetch('/api/attendance/getAttendanceRecords');
         attendanceRecords = await response.json();
         
         displayAttendanceHistory();
@@ -238,19 +230,19 @@ function displayAttendanceHistory(filteredRecords = null) {
     const recordsHtml = records.map(record => {
         const statusClass = record.status === 'cancelled' ? 'cancelled' : 'checked-in';
         const statusText = record.status === 'cancelled' ? 'CANCELLED' : 'CHECKED IN';
-        const date = new Date(record.datetime).toLocaleString();
+        const dateText = record.datetime || '';
         
         return `
             <div class="attendance-record ${statusClass}">
-                <div style="display: flex; justify-content: between; align-items: center;">
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px;">
                     <div style="flex: 1;">
-                        <strong>${record.customer.firstName} ${record.customer.lastName}</strong>
+                        <strong>${record.customerName || record.customerId}</strong>
                         <br>
-                        Class: ${record.class.className}
+                        Class: ${record.className || record.classId}
                         <br>
-                        Instructor: ${record.class.instructor ? `${record.class.instructor.firstName} ${record.class.instructor.lastName}` : 'TBD'}
+                        Instructor: ${record.instructorName || 'TBD'}
                         <br>
-                        Date: ${date}
+                        Date: ${dateText}
                         <br>
                         <span style="color: ${record.status === 'cancelled' ? '#dc3545' : '#28a745'}; font-weight: bold;">
                             ${statusText}
@@ -258,7 +250,7 @@ function displayAttendanceHistory(filteredRecords = null) {
                     </div>
                     ${record.status !== 'cancelled' ? `
                         <div>
-                            <button onclick="cancelCheckin('${record._id}')" class="btn-danger" style="padding: 5px 10px; font-size: 0.9em;">
+                            <button onclick="cancelCheckin(${record.checkinId})" class="btn-danger" style="padding: 5px 10px; font-size: 0.9em;">
                                 Cancel Check-in
                             </button>
                         </div>
@@ -277,7 +269,7 @@ function filterAttendanceHistory() {
     const customerId = historyCustomerSelect.value;
     
     if (customerId) {
-        const filteredRecords = attendanceRecords.filter(record => record.customer._id === customerId);
+        const filteredRecords = attendanceRecords.filter(record => (record.customerId === customerId) || (record.customer && record.customer._id === customerId));
         displayAttendanceHistory(filteredRecords);
     } else {
         displayAttendanceHistory();
@@ -285,14 +277,16 @@ function filterAttendanceHistory() {
 }
 
 // Cancel check-in
-async function cancelCheckin(attendanceId) {
+async function cancelCheckin(checkinId) {
     if (!confirm('Are you sure you want to cancel this check-in? This will restore the customer\'s class balance.')) {
         return;
     }
     
     try {
-        const response = await fetch(`/api/attendance/${attendanceId}/cancel`, {
-            method: 'PUT'
+        const response = await fetch(`/api/attendance/cancelCheckin`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ checkinId })
         });
         
         const result = await response.json();
@@ -314,7 +308,7 @@ async function cancelCheckin(attendanceId) {
 // Load attendance statistics
 async function loadAttendanceStats() {
     try {
-        const response = await fetch('/api/attendance/stats');
+        const response = await fetch('/api/attendance/getStats');
         const stats = await response.json();
         
         displayAttendanceStats(stats);
@@ -335,17 +329,18 @@ function displayAttendanceStats(stats) {
                 <div>Total Check-ins</div>
             </div>
             <div class="stat-card">
-                <span class="stat-number">${stats.todayCheckins}</span>
-                <div>Today's Check-ins</div>
+                <span class="stat-number">${stats.totalCancellations}</span>
+                <div>Total Cancellations</div>
             </div>
             <div class="stat-card">
-                <span class="stat-number">${stats.thisWeekCheckins}</span>
-                <div>This Week's Check-ins</div>
+                <span class="stat-number">${stats.totalNoShows}</span>
+                <div>No-shows</div>
             </div>
-            <div class="stat-card">
-                <span class="stat-number">${stats.uniqueCustomers}</span>
-                <div>Active Customers</div>
-            </div>
+            ${Array.isArray(stats.popularClasses) ? `
+            <div class="stat-card" style="grid-column: span 2;">
+                <div style="font-weight:600; margin-bottom:8px;">Top Classes</div>
+                ${stats.popularClasses.map(pc => `<div>${pc.className || pc.classId}: <strong>${pc.attendanceCount}</strong></div>`).join('')}
+            </div>` : ''}
         </div>
     `;
     

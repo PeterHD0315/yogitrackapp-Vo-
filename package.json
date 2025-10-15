@@ -6,6 +6,13 @@
   "scripts": {
     "start": "node yogiserver.cjs",
     "dev": "node yogiserver.cjs",
+    "seed": "node scripts/seed.cjs",
+    "seed:all": "node scripts/seed.cjs --module=all",
+    "seed:instructors": "node scripts/seed.cjs --module=instructor",
+    "seed:packages": "node scripts/seed.cjs --module=package",
+    "seed:customers": "node scripts/seed.cjs --module=customer",
+    "seed:classes": "node scripts/seed.cjs --module=class",
+    "seed:attendance": "node scripts/seed.cjs --module=attendance",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "engines": {

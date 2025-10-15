@@ -27,10 +27,34 @@
         <a href="../index.html">Log Out</a>
       </nav>
     </aside>
-
-
+    <!-- Main content -->
+    <main class="layout--center" style="flex:1; padding: 2rem;">
+      <section class="card" style="max-width: 720px;">
+        <h2>Demo Tools</h2>
+        <p>Quickly reset data for a focused demo.</p>
+        <div class="grid-2">
+          <label>Module
+            <select id="seedModule" class="form-input">
+              <option value="all">All</option>
+              <option value="instructor">Instructors</option>
+              <option value="package">Packages</option>
+              <option value="customer">Customers</option>
+              <option value="class">Classes</option>
+              <option value="attendance">Attendance</option>
+            </select>
+          </label>
+          <div>
+            <label>&nbsp;</label>
+            <button id="runSeedBtn" class="btn btn--primary" style="width:100%">Run Demo Seed</button>
+          </div>
+        </div>
+        <div id="seedResult" style="margin-top:1rem; font-size: .9rem; color:#055">
+        </div>
+      </section>
+    </main>
   </div>
     </div> <!-- End of background wrapper -->
+<script src="../js/dashboard.js"></script>
 </body>
 
 </html>
